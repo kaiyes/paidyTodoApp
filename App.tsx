@@ -12,6 +12,9 @@ import {
 import * as LocalAuthentication from 'expo-local-authentication'
 import FlashMessage from 'react-native-flash-message'
 
+//notification component
+import Notification from './src/components/Notification'
+
 export default function App() {
 	const [todos, setTodos] = useState([])
 	const [textInput, setTextInput] = useState('')
@@ -20,31 +23,42 @@ export default function App() {
 	const [editingText, setEditingText] = useState('')
 
 	// Add a new ToDo
-	const addTodo = () => {
+	const addTodo = async () => {
 		// Checking for Biometric
-		handleAuthentication()
+		const isAuthenticated = await handleAuthentication()
 		//adding todo
-		const newTodo = {
-			id: Date.now().toString(),
-			text: textInput
+		if (isAuthenticated) {
+			const newTodo = {
+				id: Date.now().toString(),
+				text: textInput
+			}
+			setTodos([...todos, newTodo])
+			setTextInput('')
+		} else {
+			Notification('error', 'Please authenticate first')
 		}
-		setTodos([...todos, newTodo])
-		setTextInput('')
 	}
 
 	// Delete a ToDo
-	const deleteTodo = (id) => {
+	const deleteTodo = async (id) => {
 		// Checking for Biometric
-		handleAuthentication()
-		setTodos(todos.filter((todo) => todo.id !== id))
+		const isAuthenticated = await handleAuthentication()
+
+		isAuthenticated
+			? setTodos(todos.filter((todo) => todo.id !== id))
+			: Notification('error', 'Please authenticate first')
 	}
 
-	//update editing
-	const startEditing = (id, text) => {
+	//update todo
+	const startEditing = async (id, text) => {
 		// Checking for Biometric
-		handleAuthentication()
-		setEditingId(id)
-		setEditingText(text)
+		const isAuthenticated = await handleAuthentication()
+		if (isAuthenticated) {
+			setEditingId(id)
+			setEditingText(text)
+		} else {
+			Notification('error', 'Please authenticate first')
+		}
 	}
 
 	//save editing
@@ -77,7 +91,7 @@ export default function App() {
 		const savedBiometrics = await LocalAuthentication.isEnrolledAsync()
 		if (!savedBiometrics) {
 			Notification('error', 'No FaceID enrolled. Please set up FaceID on your device.')
-			return
+			return false
 		}
 
 		const authentication = await LocalAuthentication.authenticateAsync({
@@ -89,7 +103,7 @@ export default function App() {
 
 		if (authentication.success) {
 			Notification('success', 'FaceID authentication successful!')
-			return
+			return true
 		} else {
 			Notification('error', 'FaceID authentication failed.')
 		}
