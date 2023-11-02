@@ -169,7 +169,8 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: 'center',
 		backgroundColor: '#1E1E42',
-		paddingHorizontal: 20
+		paddingHorizontal: 20,
+		paddingTop: 10
 	},
 	textInput: {
 		borderWidth: 0,
