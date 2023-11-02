@@ -18,7 +18,9 @@ export default function App() {
 
   // Add a new ToDo
   const addTodo = () => {
-    // Here you could add biometric check
+    // Checking for Biometric
+    handleAuthentication();
+    //adding todo
     const newTodo = {
       id: Date.now().toString(),
       text: textInput,
@@ -29,7 +31,6 @@ export default function App() {
 
   // Delete a ToDo
   const deleteTodo = id => {
-    // Here you could add biometric check
     setTodos(todos.filter(todo => todo.id !== id));
   };
 
