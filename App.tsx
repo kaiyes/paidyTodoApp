@@ -5,27 +5,19 @@ import {
 	Text,
 	View,
 	TextInput,
-	Button,
 	FlatList,
 	TouchableOpacity,
 	Platform
 } from 'react-native'
 import * as LocalAuthentication from 'expo-local-authentication'
-import { showMessage, hideMessage } from 'react-native-flash-message'
-
-function Notification(type, title) {
-	function openAlert() {
-		showMessage({
-			message: title,
-			type: type == 'success' ? type : 'danger'
-		})
-	}
-	return <View onPress={openAlert()} />
-}
+import FlashMessage from 'react-native-flash-message'
 
 export default function App() {
 	const [todos, setTodos] = useState([])
 	const [textInput, setTextInput] = useState('')
+
+	const [editingId, setEditingId] = useState(null)
+	const [editingText, setEditingText] = useState('')
 
 	// Add a new ToDo
 	const addTodo = () => {
@@ -42,7 +34,27 @@ export default function App() {
 
 	// Delete a ToDo
 	const deleteTodo = (id) => {
+		// Checking for Biometric
+		handleAuthentication()
 		setTodos(todos.filter((todo) => todo.id !== id))
+	}
+
+	//update editing
+	const startEditing = (id, text) => {
+		// Checking for Biometric
+		handleAuthentication()
+		setEditingId(id)
+		setEditingText(text)
+	}
+
+	//save editing
+	const saveEditing = () => {
+		const updatedTodos = todos.map((todo) =>
+			todo.id === editingId ? { ...todo, text: editingText } : todo
+		)
+		setTodos(updatedTodos)
+		setEditingId(null)
+		setEditingText('')
 	}
 
 	// Check if FaceID is available
@@ -86,10 +98,24 @@ export default function App() {
 	// Render each ToDo
 	const renderItem = ({ item }) => (
 		<View style={styles.todoItem}>
-			<Text style={styles.todoText}>{item.text}</Text>
-			<TouchableOpacity onPress={() => deleteTodo(item.id)}>
-				<Text style={styles.deleteText}>Delete</Text>
-			</TouchableOpacity>
+			{editingId === item.id ? (
+				<>
+					<TextInput style={styles.editInput} value={editingText} onChangeText={setEditingText} />
+					<TouchableOpacity onPress={saveEditing}>
+						<Text style={styles.saveText}>Save</Text>
+					</TouchableOpacity>
+				</>
+			) : (
+				<>
+					<Text style={styles.todoText}>{item.text}</Text>
+					<TouchableOpacity onPress={() => startEditing(item.id, item.text)}>
+						<Text style={styles.editText}>Edit</Text>
+					</TouchableOpacity>
+					<TouchableOpacity onPress={() => deleteTodo(item.id)}>
+						<Text style={styles.deleteText}>Delete</Text>
+					</TouchableOpacity>
+				</>
+			)}
 		</View>
 	)
 
@@ -105,6 +131,7 @@ export default function App() {
 				<TextInput
 					style={styles.textInput}
 					placeholder="Add a new todo..."
+					placeholderTextColor={'silver'}
 					value={textInput}
 					onChangeText={setTextInput}
 					onSubmitEditing={() => addTodo()}
@@ -118,6 +145,7 @@ export default function App() {
 					style={styles.list}
 				/>
 			</View>
+			<FlashMessage position="top" titleStyle={styles.alertTitleStyle} />
 		</SafeAreaView>
 	)
 }
@@ -168,5 +196,28 @@ const styles = StyleSheet.create({
 		fontSize: 22,
 		color: '#E94E77',
 		marginBottom: 10
+	},
+	editInput: {
+		backgroundColor: '#FFF',
+		borderRadius: 5,
+		flex: 3,
+		marginRight: 10,
+		height: 20
+	},
+	saveText: {
+		color: '#4CAF50',
+		fontSize: 16,
+		flex: 1
+	},
+	editText: {
+		color: '#FFC107',
+		fontSize: 16,
+		marginRight: 10,
+		flex: 1
+	},
+	alertTitleStyle: {
+		fontSize: 14,
+		textAlign: 'center',
+		color: 'white'
 	}
 })
