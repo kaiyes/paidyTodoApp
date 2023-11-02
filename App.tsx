@@ -11,6 +11,17 @@ import {
   Platform,
 } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
+import {showMessage, hideMessage} from 'react-native-flash-message';
+
+function Notification(type, title) {
+  function openAlert() {
+    showMessage({
+      message: title,
+      type: type == 'success' ? type : 'danger',
+    });
+  }
+  return <View onPress={openAlert()} />;
+}
 
 export default function App() {
   const [todos, setTodos] = useState([]);
@@ -38,7 +49,10 @@ export default function App() {
   const checkDeviceForHardware = async () => {
     let compatible = await LocalAuthentication.hasHardwareAsync();
     if (compatible) {
-      console.log('Compatible Device. Biometric Authentication is possible.');
+      Notification(
+        'success',
+        'Compatible Device. Biometric Authentication is possible.',
+      );
       // Check what types of biometrics are available
       let biometricTypes =
         await LocalAuthentication.supportedAuthenticationTypesAsync();
@@ -47,10 +61,13 @@ export default function App() {
           LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION,
         )
       ) {
-        console.log('FaceID is supported on this device.');
+        Notification('success', 'FaceID is supported on this device.');
       }
     } else {
-      console.log('Current device does not support biometric authentication.');
+      Notification(
+        'error',
+        'Current device does not support biometric authentication.',
+      );
     }
   };
 
@@ -58,7 +75,10 @@ export default function App() {
   const handleAuthentication = async () => {
     const savedBiometrics = await LocalAuthentication.isEnrolledAsync();
     if (!savedBiometrics) {
-      console.log('No FaceID enrolled. Please set up FaceID on your device.');
+      Notification(
+        'error',
+        'No FaceID enrolled. Please set up FaceID on your device.',
+      );
       return;
     }
 
@@ -70,9 +90,10 @@ export default function App() {
     });
 
     if (authentication.success) {
-      console.log('FaceID authentication successful!');
+      Notification('success', 'FaceID authentication successful!');
+      return;
     } else {
-      console.log('FaceID authentication failed.');
+      Notification('error', 'FaceID authentication failed.');
     }
   };
 
